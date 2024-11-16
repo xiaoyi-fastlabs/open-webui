@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: claire
+    region: frankfurt
+    plan: pro
+    runtime: image
+    image:
+      url: ghcr.io/open-webui/open-webui:main
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+    disk:
+      name: storage
+      mountPath: /app/backend/data
+      sizeGB: 10
