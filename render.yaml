@@ -3,9 +3,9 @@ services:
     name: claire
     region: frankfurt
     plan: pro
-    runtime: image
-    image:
-      url: ghcr.io/open-webui/open-webui:main
+    runtime: docker
+    dockerfilePath: ./docker-compose.yaml
+    dockerCommand: docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui --restart always
     envVars:
       - key: OPENAI_API_KEY
         sync: false
