@@ -5,7 +5,7 @@ services:
     plan: pro
     runtime: docker
     dockerfilePath: ./Dockerfile
-    dockerCommand: docker run -d -p 3000:8080 -v claire:/app/backend/data --name claire --restart always
+    # dockerCommand: docker run -d -p 3000:8080 -v claire:/app/backend/data --name claire --restart always
     envVars:
       - key: OPENAI_API_KEY
         sync: false
