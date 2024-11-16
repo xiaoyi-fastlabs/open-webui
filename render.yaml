@@ -4,8 +4,8 @@ services:
     region: frankfurt
     plan: pro
     runtime: docker
-    dockerfilePath: ./docker-compose.yaml
-    dockerCommand: docker run -d -p 3000:8080 -v open-webui:/app/backend/data --name open-webui --restart always
+    dockerfilePath: ./Dockerfile
+    dockerCommand: docker run -d -p 3000:8080 -v claire:/app/backend/data --name claire --restart always
     envVars:
       - key: OPENAI_API_KEY
         sync: false
