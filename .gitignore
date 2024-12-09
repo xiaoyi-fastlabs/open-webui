@@ -307,3 +307,6 @@ dist
 cypress/videos
 cypress/screenshots
 .vscode/settings.json
+
+fastlabs.pem
+deploy-aws.sh
