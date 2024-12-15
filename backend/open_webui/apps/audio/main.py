@@ -16,6 +16,8 @@ from open_webui.config import (
     AUDIO_STT_MODEL,
     AUDIO_STT_OPENAI_API_BASE_URL,
     AUDIO_STT_OPENAI_API_KEY,
+    AUDIO_STT_AZURE_API_BASE_URL,
+    AUDIO_STT_AZURE_API_KEY,
     AUDIO_TTS_API_KEY,
     AUDIO_TTS_ENGINE,
     AUDIO_TTS_MODEL,
@@ -48,7 +50,7 @@ from pydantic import BaseModel
 from open_webui.utils.utils import get_admin_user, get_verified_user
 
 # Constants
-MAX_FILE_SIZE_MB = 25
+MAX_FILE_SIZE_MB = 200
 MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024  # Convert MB to bytes
 
 
@@ -73,6 +75,8 @@ app.state.config = AppConfig()
 
 app.state.config.STT_OPENAI_API_BASE_URL = AUDIO_STT_OPENAI_API_BASE_URL
 app.state.config.STT_OPENAI_API_KEY = AUDIO_STT_OPENAI_API_KEY
+app.state.config.STT_AZURE_API_BASE_URL = AUDIO_STT_AZURE_API_BASE_URL
+app.state.config.STT_AZURE_API_KEY = AUDIO_STT_AZURE_API_KEY
 app.state.config.STT_ENGINE = AUDIO_STT_ENGINE
 app.state.config.STT_MODEL = AUDIO_STT_MODEL
 
@@ -142,6 +146,8 @@ class TTSConfigForm(BaseModel):
 class STTConfigForm(BaseModel):
     OPENAI_API_BASE_URL: str
     OPENAI_API_KEY: str
+    AZURE_API_BASE_URL: str
+    AZURE_API_KEY: str
     ENGINE: str
     MODEL: str
     WHISPER_MODEL: str
@@ -196,6 +202,8 @@ async def get_audio_config(user=Depends(get_admin_user)):
         "stt": {
             "OPENAI_API_BASE_URL": app.state.config.STT_OPENAI_API_BASE_URL,
             "OPENAI_API_KEY": app.state.config.STT_OPENAI_API_KEY,
+            "AZURE_API_BASE_URL": app.state.config.STT_AZURE_API_BASE_URL,
+            "AZURE_API_KEY": app.state.config.STT_AZURE_API_KEY,
             "ENGINE": app.state.config.STT_ENGINE,
             "MODEL": app.state.config.STT_MODEL,
             "WHISPER_MODEL": app.state.config.WHISPER_MODEL,
@@ -221,6 +229,8 @@ async def update_audio_config(
 
     app.state.config.STT_OPENAI_API_BASE_URL = form_data.stt.OPENAI_API_BASE_URL
     app.state.config.STT_OPENAI_API_KEY = form_data.stt.OPENAI_API_KEY
+    app.state.config.STT_AZURE_API_BASE_URL = form_data.stt.AZURE_API_BASE_URL
+    app.state.config.STT_AZURE_API_KEY = form_data.stt.AZURE_API_KEY
     app.state.config.STT_ENGINE = form_data.stt.ENGINE
     app.state.config.STT_MODEL = form_data.stt.MODEL
     app.state.config.WHISPER_MODEL = form_data.stt.WHISPER_MODEL
@@ -241,6 +251,8 @@ async def update_audio_config(
         "stt": {
             "OPENAI_API_BASE_URL": app.state.config.STT_OPENAI_API_BASE_URL,
             "OPENAI_API_KEY": app.state.config.STT_OPENAI_API_KEY,
+            "AZURE_API_BASE_URL": app.state.config.STT_AZURE_API_BASE_URL,
+            "AZURE_API_KEY": app.state.config.STT_AZURE_API_KEY,
             "ENGINE": app.state.config.STT_ENGINE,
             "MODEL": app.state.config.STT_MODEL,
             "WHISPER_MODEL": app.state.config.WHISPER_MODEL,
@@ -520,6 +532,57 @@ def transcribe(file_path):
         except Exception as e:
             log.exception(e)
             error_detail = "Open WebUI: Server Connection Error"
+            if r is not None:
+                try:
+                    res = r.json()
+                    if "error" in res:
+                        error_detail = f"External: {res['error']['message']}"
+                except Exception:
+                    error_detail = f"External: {e}"
+
+            raise Exception(error_detail)
+    elif app.state.config.STT_ENGINE == "azure":
+        # if is_mp4_audio(file_path):
+        #     print("is_mp4_audio")
+        #     os.rename(file_path, file_path.replace(".wav", ".mp4"))
+        #     # Convert MP4 audio file to WAV format
+        #     convert_mp4_to_wav(file_path.replace(".wav", ".mp4"), file_path)
+
+        headers = {
+            "Ocp-Apim-Subscription-Key": app.state.config.STT_AZURE_API_KEY
+        }
+
+        files = [
+            (
+                "audio",
+                (filename, open(file_path, "rb")),
+            )
+        ]
+
+        log.debug(f"Sending audio file {filename} to Azure STT")
+
+        r = None
+        try:
+            r = requests.post(
+                url=f"{app.state.config.STT_AZURE_API_BASE_URL}",
+                headers=headers,
+                files=files,
+            )
+
+            r.raise_for_status()
+
+            data = r.json()
+
+            # save the transcript to a json file
+            transcript_file = f"{file_dir}/{id}.json"
+            with open(transcript_file, "w") as f:
+                json.dump(data, f)
+
+            print(data)
+            return data['combinedPhrases'][0]
+        except Exception as e:
+            log.exception(e)
+            error_detail = "Azure STT Error"
             if r is not None:
                 try:
                     res = r.json()

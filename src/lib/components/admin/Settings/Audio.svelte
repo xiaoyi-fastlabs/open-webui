@@ -40,6 +40,9 @@
 	let STT_MODEL = '';
 	let STT_WHISPER_MODEL = '';
 
+  let STT_AZURE_API_BASE_URL = '';
+  let STT_AZURE_API_KEY = '';
+
 	let STT_WHISPER_MODEL_LOADING = false;
 
 	// eslint-disable-next-line no-undef
@@ -103,7 +106,9 @@
 				OPENAI_API_KEY: STT_OPENAI_API_KEY,
 				ENGINE: STT_ENGINE,
 				MODEL: STT_MODEL,
-				WHISPER_MODEL: STT_WHISPER_MODEL
+				WHISPER_MODEL: STT_WHISPER_MODEL,
+        AZURE_API_BASE_URL: STT_AZURE_API_BASE_URL,
+        AZURE_API_KEY: STT_AZURE_API_KEY
 			}
 		});
 
@@ -140,6 +145,9 @@
 			STT_OPENAI_API_BASE_URL = res.stt.OPENAI_API_BASE_URL;
 			STT_OPENAI_API_KEY = res.stt.OPENAI_API_KEY;
 
+      STT_AZURE_API_BASE_URL = res.stt.AZURE_API_BASE_URL;
+      STT_AZURE_API_KEY = res.stt.AZURE_API_KEY;
+
 			STT_ENGINE = res.stt.ENGINE;
 			STT_MODEL = res.stt.MODEL;
 			STT_WHISPER_MODEL = res.stt.WHISPER_MODEL;
@@ -172,6 +180,7 @@
 						>
 							<option value="">{$i18n.t('Whisper (Local)')}</option>
 							<option value="openai">OpenAI</option>
+              <option value="azure">Azure Speech</option>
 							<option value="web">{$i18n.t('Web API')}</option>
 						</select>
 					</div>
@@ -208,6 +217,19 @@
 									<option value="whisper-1" />
 								</datalist>
 							</div>
+						</div>
+					</div>
+        {:else if STT_ENGINE === 'azure'}
+					<div>
+						<div class="mt-1 flex gap-2 mb-1">
+							<input
+								class="flex-1 w-full bg-transparent outline-none"
+								placeholder={$i18n.t('API Base URL')}
+								bind:value={STT_AZURE_API_BASE_URL}
+								required
+							/>
+
+							<SensitiveInput placeholder={$i18n.t('API Key')} bind:value={STT_AZURE_API_KEY} />
 						</div>
 					</div>
 				{:else if STT_ENGINE === ''}

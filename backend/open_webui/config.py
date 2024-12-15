@@ -640,6 +640,8 @@ ENABLE_OPENAI_API = PersistentConfig(
 
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_API_BASE_URL = os.environ.get("OPENAI_API_BASE_URL", "")
+AZURE_API_BASE_URL = os.environ.get("AZURE_API_BASE_URL", "")
+AZURE_API_KEY = os.environ.get("AZURE_API_KEY", "")
 
 
 if OPENAI_API_BASE_URL == "":
@@ -1700,6 +1702,18 @@ AUDIO_STT_OPENAI_API_KEY = PersistentConfig(
     "AUDIO_STT_OPENAI_API_KEY",
     "audio.stt.openai.api_key",
     os.getenv("AUDIO_STT_OPENAI_API_KEY", OPENAI_API_KEY),
+)
+
+AUDIO_STT_AZURE_API_BASE_URL = PersistentConfig(
+    "AUDIO_STT_AZURE_API_BASE_URL",
+    "audio.stt.azure.api_base_url",
+    os.getenv("AUDIO_STT_AZURE_API_BASE_URL", AZURE_API_BASE_URL),
+)
+
+AUDIO_STT_AZURE_API_KEY = PersistentConfig(
+    "AUDIO_STT_AZURE_API_KEY",
+    "audio.stt.azure.api_key",
+    os.getenv("AUDIO_STT_AZURE_API_KEY", AZURE_API_KEY),
 )
 
 AUDIO_STT_ENGINE = PersistentConfig(
