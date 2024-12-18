@@ -19,6 +19,8 @@
 	let durationSeconds = 0;
 	let durationCounter = null;
 
+  let wakeLock = null;
+
 	let transcription = '';
 
 	const startDurationCounter = () => {
@@ -264,6 +266,11 @@
 		}
 
 		stream = null;
+
+		if (wakeLock) {
+			wakeLock.release();
+			wakeLock = null;
+		}
 	};
 
 	const confirmRecording = async () => {
@@ -289,7 +296,37 @@
 	let maxVisibleItems = 300;
 	$: maxVisibleItems = Math.floor(containerWidth / 5); // 2px width + 0.5px gap
 
-	onMount(() => {
+	onMount(async () => {
+		const setWakeLock = async () => {
+			try {
+				wakeLock = await navigator.wakeLock.request('screen');
+
+        console.log('Wake Lock requested');
+			} catch (err) {
+				// The Wake Lock request has failed - usually system related, such as battery.
+				console.log(err);
+			}
+
+			if (wakeLock) {
+				// Add a listener to release the wake lock when the page is unloaded
+				wakeLock.addEventListener('release', () => {
+					// the wake lock has been released
+					console.log('Wake Lock released');
+				});
+			}
+		};
+
+		if ('wakeLock' in navigator) {
+			await setWakeLock();
+
+			document.addEventListener('visibilitychange', async () => {
+				// Re-request the wake lock if the document becomes visible
+				if (wakeLock !== null && document.visibilityState === 'visible') {
+					await setWakeLock();
+				}
+			});
+		}
+
 		// listen to width changes
 		resizeObserver = new ResizeObserver(() => {
 			VISUALIZER_BUFFER_LENGTH = Math.floor(window.innerWidth / 4);
